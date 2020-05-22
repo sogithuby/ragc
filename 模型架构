@@ -1,0 +1,269 @@
+GraphNetwork(
+  (0): GraphReg(knn=False, n_neigh=100, rad_neigh=0.1, self_loop=True, edge_attr=['posspherical'])
+  (1): AGCConv(
+    AGCConv(1, 16, bias=False
+    (_wg): Sequential(
+      (0): Linear(in_features=3, out_features=16, bias=True)
+      (1): ReLU(inplace=True)
+      (2): Linear(in_features=16, out_features=32, bias=True)
+      (3): ReLU(inplace=True)
+      (4): Linear(in_features=32, out_features=16, bias=False)
+    )
+  )
+  (2): BatchNorm1d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (3): ReLU(inplace=True)
+  (4): GraphPooling(
+    aggr=max, pool_rad=0.1
+    (graph_reg): GraphReg(knn=False, n_neigh=100, rad_neigh=0.15, self_loop=True, edge_attr=['posspherical'])
+  )
+  (5): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(16, 16, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=256, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(16, 16, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=256, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (6): BatchNorm1d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (7): ReLU(inplace=True)
+  (8): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(16, 16, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=256, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(16, 16, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=256, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (9): BatchNorm1d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (10): ReLU(inplace=True)
+  (11): GraphPooling(
+    aggr=max, pool_rad=0.15
+    (graph_reg): GraphReg(knn=False, n_neigh=100, rad_neigh=0.25, self_loop=True, edge_attr=['posspherical'])
+  )
+  (12): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(16, 32, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=512, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(32, 32, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=1024, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (chan_adapt_criteria): Sequential(
+      (0): Conv1d(16, 32, kernel_size=(1,), stride=(1,))
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (13): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (14): ReLU(inplace=True)
+  (15): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(32, 32, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=1024, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(32, 32, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=1024, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (16): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (17): ReLU(inplace=True)
+  (18): GraphPooling(
+    aggr=max, pool_rad=0.25
+    (graph_reg): GraphReg(knn=False, n_neigh=100, rad_neigh=0.35, self_loop=True, edge_attr=['posspherical'])
+  )
+  (19): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(32, 64, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=2048, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(64, 64, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=4096, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (chan_adapt_criteria): Sequential(
+      (0): Conv1d(32, 64, kernel_size=(1,), stride=(1,))
+      (1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (20): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (21): ReLU(inplace=True)
+  (22): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(64, 64, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=4096, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(64, 64, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=4096, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (23): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (24): ReLU(inplace=True)
+  (25): GraphPooling(
+    aggr=max, pool_rad=0.35
+    (graph_reg): GraphReg(knn=False, n_neigh=100, rad_neigh=0.55, self_loop=True, edge_attr=['posspherical'])
+  )
+  (26): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(64, 128, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=8192, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(128, 128, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=16384, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (chan_adapt_criteria): Sequential(
+      (0): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+      (1): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (27): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (28): ReLU(inplace=True)
+  (29): ResidualAGCBlock(
+    (conv1): AGCConv(
+      AGCConv(128, 128, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=16384, bias=False)
+      )
+    )
+    (bn1): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (conv2): AGCConv(
+      AGCConv(128, 128, bias=False
+      (_wg): Sequential(
+        (0): Linear(in_features=3, out_features=16, bias=True)
+        (1): ReLU(inplace=True)
+        (2): Linear(in_features=16, out_features=32, bias=True)
+        (3): ReLU(inplace=True)
+        (4): Linear(in_features=32, out_features=16384, bias=False)
+      )
+    )
+    (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (30): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (31): ReLU(inplace=True)
+  (32): GraphPooling(
+    aggr=max, pool_rad=0.55
+    (graph_reg): GraphReg(knn=False, n_neigh=100, rad_neigh=0.55, self_loop=True, edge_attr=['posspherical'])
+  )
+  (33): GlobalGraphPooling(aggr=avg)
+  (34): Linear(in_features=128, out_features=128, bias=True)
+  (35): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (36): ReLU(inplace=True)
+  (37): Dropout(p=0.2, inplace=False)
+  (38): Linear(in_features=128, out_features=6, bias=True)
+)
