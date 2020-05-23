@@ -14,19 +14,19 @@ from torch_geometric.nn.pool.consecutive import consecutive_cluster
 from torch_geometric.utils import scatter_
 from torch_cluster import nearest
 
-
+# [nEdgeAtrr] + fnet_widths [16,32]  --2 提取出edge_attr的特征A，并进行fc
 def create_fnet(widths, nfeat, nfeato, orthoinit, llbias, dropout=None, batchnorm=False):
     fnet_modules = []
-    for k in range(len(widths)-1):
-        fnet_modules.append(torch.nn.Linear(widths[k], widths[k+1]))
+    for k in range(len(widths)-1):  # 循环：Linear + relu等。也就是fc层-与A，fc层后提取出权重
+        fnet_modules.append(torch.nn.Linear(widths[k], widths[k+1]))  # width[k]和width[k+1]，in_fear=3/16，outfea=16/32
         if orthoinit: init.orthogonal_(fnet_modules[-1].weight, gain=init.calculate_gain('relu'))
         if batchnorm: fnet_modules.append(torch.nn.BatchNorm1d(widths[k+1]))
         fnet_modules.append(torch.nn.ReLU(True))
         if dropout != None and dropout != 0: fnet_modules.append(torch.nn.Dropout(dropout, inplace=False))
-    fnet_modules.append(torch.nn.Linear(widths[-1], nfeat*nfeato, bias=llbias))
+    fnet_modules.append(torch.nn.Linear(widths[-1], nfeat*nfeato, bias=llbias))  # 完成权重与节点特征fc，进行节点特征更新
     if orthoinit: init.orthogonal_(fnet_modules[-1].weight)
     return torch.nn.Sequential(*fnet_modules)
-
+# 创建AGC，第一个AGC后面没有使用normalize
 def create_agc(nfeat, nfeato, fnet_widths, fnet_orthoinit, fnet_llbias, bias=False, 
                fnet_dropout = None, fnet_batchnorm = False, flow='source_to_target'):
     fnet = create_fnet(fnet_widths, nfeat, nfeato, fnet_orthoinit, fnet_llbias,
@@ -86,12 +86,12 @@ class ResidualDecBlock(torch.nn.Module):
         x += identity
         return self.relu(x)
 
-
+# 这里是残差AGC
 class ResidualAGCBlock(torch.nn.Module):
 
     def __init__(self, nfeat, nfeato, fnet_widths, fnet_orthoinit, fnet_llbias, bias=False, fnet_dropout=None, fnet_batchnorm=False, flow='source_to_target'):
         super(ResidualAGCBlock, self).__init__()
-        
+        # 创建AGC
         self.conv1 = create_agc(nfeat, nfeato, fnet_widths, fnet_orthoinit, fnet_llbias, 
                                 bias=bias,
                                 fnet_dropout=fnet_dropout,
@@ -160,7 +160,7 @@ class ResidualFeastBlock(torch.nn.Module):
         return self.relu(x)
 
 
-def numberEdgeAttr(edge_attr, nfeat):
+def numberEdgeAttr(edge_attr, nfeat):     # 返回的是edge_attr对应的num*3
     
     nEA = 0
     if edge_attr != None:
@@ -178,7 +178,7 @@ def numberEdgeAttr(edge_attr, nfeat):
                 raise RuntimeError('{} is not supported'.format(attr))
 
     return nEA
-
+# 已阅读
 class GraphReg(torch.nn.Module):
     def __init__(self, n_neigh = 9, rad_neigh=0.1, knn=None, self_loop = True,
     edge_attr = None, flow='source_to_target'):
@@ -195,10 +195,10 @@ class GraphReg(torch.nn.Module):
             graph_transform_list.append(T.KNNGraph(n_neigh, loop = self_loop,
             flow=flow))
 
-        elif self.knn == False:
+        elif self.knn == False:    # 1.使用这一个，挑选出邻居，不使用knn，使用R方法
             graph_transform_list.append(T.RadiusGraph(self.rad_neigh, loop = self_loop,
                                                       max_num_neighbors = n_neigh,
-                                                      flow=flow))
+                                                      flow=flow))   # 0.15  false  100  
         else:
             print("Connectivity of the graph will not be re-generated")  
 
@@ -216,16 +216,16 @@ class GraphReg(torch.nn.Module):
                 if attr == 'poscart':
                     graph_transform_list.append(T.Cartesian(norm=False, cat=True))
                 
-                elif attr == 'posspherical':
+                elif attr == 'posspherical':     # 2.像每条边添加属性
                     graph_transform_list.append(ext.Spherical(norm=False, cat=True))
 
                 else:
                     raise RuntimeError('{} is not supported'.format(attr))
-        self.graph_transform = T.Compose(graph_transform_list)
+        self.graph_transform = T.Compose(graph_transform_list)   # 3.完成
 
     def forward(self, data):
         if self.del_edge_attr: data.edge_attr = None
-        data = self.graph_transform(data)
+        data = self.graph_transform(data)    # 来了数据，就把它转换成我们刚定义的图的模式
         return data
 
     def extra_repr(self):
@@ -241,13 +241,13 @@ class GraphReg(torch.nn.Module):
             s += ", edge_attr={edge_attr}"
             return s.format(**self.__dict__)
 
-
+# 这里是池化操作：max or mean
 class GraphPooling(torch.nn.Module):
     def __init__(self, pool_rad, n_neigh=9, rad_neigh=0.1, knn=True,
                 self_loop=True, aggr='max', edge_attr=None, flow='source_to_target'):
         super(GraphPooling, self).__init__() 
-        self.pool_rad = pool_rad
-        self.graph_reg = GraphReg(n_neigh, rad_neigh, knn, self_loop, edge_attr, flow=flow)
+        self.pool_rad = pool_rad     # 0.1，这里是pooling Radius
+        self.graph_reg = GraphReg(n_neigh, rad_neigh, knn, self_loop, edge_attr, flow=flow)  # 100  0.15  false True 构图
         
         self.aggr = aggr.strip().lower()
         
@@ -259,8 +259,8 @@ class GraphPooling(torch.nn.Module):
             raise RuntimeError("Invalid aggregation method in Graph Pooling Layer")
         
     def forward(self, data):
-        
-        cluster = nn_geometric.voxel_grid(data.pos, data.batch, self.pool_rad, 
+        # 下采样，得到新的数据
+        cluster = nn_geometric.voxel_grid(data.pos, data.batch, self.pool_rad,     # self.pool_rad=0.1，找到目标池化后数据的范围
                                           start=data.pos.min(dim=0)[0] - self.pool_rad * 0.5, 
                                           end=data.pos.max(dim=0)[0] + self.pool_rad * 0.5)
         
@@ -270,7 +270,7 @@ class GraphPooling(torch.nn.Module):
         new_batch = data.batch[perm]
   
         cluster = nearest(data.pos, new_pos, data.batch, new_batch)
-        data.x = scatter_(self._aggr, data.x, cluster, dim_size=new_pos.size(0))
+        data.x = scatter_(self._aggr, data.x, cluster, dim_size=new_pos.size(0))  # 根据self._aggr判断是什么池化，最大还是平均
 
   
         data.pos = new_pos
@@ -278,7 +278,7 @@ class GraphPooling(torch.nn.Module):
         data.edge_attr = None
         
         
-        data = self.graph_reg(data)
+        data = self.graph_reg(data)  # 下采样完成后，再进行构图操作
         return data
 
     def extra_repr(self):
@@ -345,7 +345,7 @@ class GraphNetwork(torch.nn.Module):
                 module = GraphReg(knn=True, n_neigh=neigh, edge_attr=edge_attr, self_loop=True, flow=self.flow)
                 nEdgeAttr = numberEdgeAttr(edge_attr, nfeat)
 
-            elif conf[0] == 'ggrad':
+            elif conf[0] == 'ggrad':   # 这里是整体流程的第一步
                 if len(conf) < 3: raise RuntimeError("{} Graph Generation layer requires more arguments".format(d))
                 rad = float(conf[1])
                 neigh = int(conf[2])
@@ -357,8 +357,8 @@ class GraphNetwork(torch.nn.Module):
                         if len(conf) == 5: device = conf[4]
                         elif len(conf) > 5: raise RuntimeError("Invalid parameters in {} ggrad layer".format(d))
                 
-                module = GraphReg(knn=False, n_neigh=neigh, edge_attr=edge_attr, self_loop=True, flow=self.flow)
-                nEdgeAttr = numberEdgeAttr(edge_attr, nfeat)
+                module = GraphReg(knn=False, n_neigh=neigh, edge_attr=edge_attr, self_loop=True, flow=self.flow)  # 建立结点、边、属性的图
+                nEdgeAttr = numberEdgeAttr(edge_attr, nfeat)    # 返回的是edge_attr中的字符数*3，总num
 
             # Fully connected layer
             # Args: output_features
@@ -371,13 +371,13 @@ class GraphNetwork(torch.nn.Module):
                 elif len(conf) > 3: raise RuntimeError("Invalid parameters in {} fully connected layer".format(d))
 
             # Batch norm layer
-            elif conf[0] == 'b':
+            elif conf[0] == 'b':     # 这里是整体流程的第三步，就是加了个归一化
                 module = torch.nn.BatchNorm1d(nfeat, affine=True, track_running_stats=True)
                 if len(conf) == 2: device = conf[1]
                 elif len(conf) > 3: raise RuntimeError("Invalid parameters in {} batchnom layer".format(d))
             
             # Relu layer
-            elif conf[0] == 'r':
+            elif conf[0] == 'r':    # 这里是整体流程的第四步，就是进行了激励函数relu操作
                 module = torch.nn.ReLU(True)
                 if len(conf) == 2: device = conf[1]
                 elif len(conf) > 3: raise RuntimeError("Invalid parameters in {} relu layer".format(d))
@@ -433,10 +433,10 @@ class GraphNetwork(torch.nn.Module):
                 module=ResidualFeastBlock(nfeat, nfeato, M, bias=True)
                 nfeat = nfeato
             
-            # agc
+            # agc    # 整个流程的第二步，进入AGC模块
             elif conf[0] == 'agc':
                 if len(conf) < 2: raise RuntimeError("{} agc layer requires as argument the output features".format(d))
-                nfeato = int(conf[1])
+                nfeato = int(conf[1])  # 16
                 if len(conf) > 2:
                     if conf[2].isdigit(): device = conf[2]
                     else:
@@ -456,17 +456,17 @@ class GraphNetwork(torch.nn.Module):
                     
                         elif len(conf) > 4: raise RuntimeError("Invalid parameters in {} ec layer".format(d))
             
-                module = create_agc(nfeat, nfeato, [nEdgeAttr] + fnet_widths,
+                module = create_agc(nfeat, nfeato, [nEdgeAttr] + fnet_widths,   # AGC模块
                                     fnet_orthoinit, fnet_llbias,
                                     bias=agc_bias,
                                     fnet_dropout=fnet_dropout,
                                     fnet_batchnorm=fnet_batchnorm,
                                     flow=self.flow)
-                nfeat = nfeato
+                nfeat = nfeato     # 输出特征变为输入特征，实时更新
 
-            elif conf[0] == 'ragc':
+            elif conf[0] == 'ragc':  # 这里是整个流程的第六步，残差AGC
                 if len(conf) < 2: raise RuntimeError("{} agc layer requires as argument the output features".format(d))
-                nfeato = int(conf[1])
+                nfeato = int(conf[1])   # 16
                 if len(conf) > 2:
                     if conf[2].isdigit(): device = conf[2]
                     else:
@@ -518,22 +518,22 @@ class GraphNetwork(torch.nn.Module):
                 nEdgeAttr = numberEdgeAttr(edge_attr, nfeat)
 
             # Radius pooling layer  
-            elif conf[0] == 'prnn':
+            elif conf[0] == 'prnn':   # 这里是整个流程的第五步，池化
                 if len(conf)<5: raise RuntimeError("{} RNN Pool layer requires more arguments".format(d))
-                aggr = conf[1]
-                pradius = float(conf[2])
-                rad_neigh = float(conf[3])
-                nn = int(conf[4])
+                aggr = conf[1]   # max
+                pradius = float(conf[2])   # 0.1
+                rad_neigh = float(conf[3])   #0.15
+                nn = int(conf[4])  # 100
 
                 if len(conf) > 5:
-                    if conf[5].isdigit():
-                        device = conf[5]
+                    if conf[5].isdigit():  # 0
+                        device = conf[5]    
                     else:
                         edge_attr = [attr.strip() for attr in conf[5].split('-')]
                         if len(conf) == 7: device = conf[6]
                         elif len(conf) > 7: raise RuntimeError("Invalid parameters in {} prnn layer".format(d))
                
-                module = GraphPooling(pradius, n_neigh=nn, rad_neigh=rad_neigh, 
+                module = GraphPooling(pradius, n_neigh=nn, rad_neigh=rad_neigh,    # 0.1  100  0.15  ... max   
                                                 knn=False, self_loop=True, aggr=aggr, 
                                                 edge_attr=edge_attr,
                                                 flow=self.flow)
